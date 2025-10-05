@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Steam UX Fix — Full Prototype (Single HTML)</title>
+<style>
+:root{
+  --bg:#071027; --card:#0b1220; --muted:#9aa4b2;
+  --accent:#6366f1; --accent2:#06b6d4; --glass: rgba(255,255,255,0.02);
+  --success:#10b981; --danger:#ef4444; --shadow: 0 10px 30px rgba(2,6,23,0.6);
+  font-family: Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;padding:28px;background:
+    radial-gradient(700px 300px at 10% 10%, rgba(99,102,241,0.06), transparent 10%),
+    radial-gradient(700px 200px at 90% 90%, rgba(6,182,212,0.03), transparent 10%),
+    linear-gradient(180deg,#041026 0%, #02101a 100%);
+  color:#e6eef8;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+.container{max-width:1200px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:12px}
+.title{display:flex;flex-direction:column}
+h1{margin:0;font-size:20px;font-weight:700}
+.subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+.top-controls{display:flex;align-items:center;gap:10px}
+select,input[type="text"]{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:inherit}
+.btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:0;padding:9px 12px;border-radius:10px;color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(99,102,241,0.12);transition:transform .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none}
+.profile-icon{width:44px;height:44px;border-radius:50%;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0b1220,#071028)}
+.profile-icon img{width:100%;height:100%;object-fit:cover}
+.profile-icon .anon{font-weight:700;color:var(--muted)}
+main{display:grid;grid-template-columns:1fr 320px;gap:18px}
+.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+nav.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+nav.tabs button{padding:8px 12px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--muted);font-weight:700;cursor:pointer}
+nav.tabs button.active{background:linear-gradient(90deg, rgba(99,102,241,0.14), rgba(6,182,212,0.06));color:white;border:1px solid rgba(255,255,255,0.04)}
+
+.content{min-height:520px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.game-item{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:rgba(255,255,255,0.02)}
+.game-art{width:92px;height:58px;border-radius:8px;background:linear-gradient(90deg,#081226,#061224);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;overflow:hidden}
+.game-art img{width:100%;height:100%;object-fit:cover}
+.game-meta{flex:1}
+.game-meta .title{font-weight:700}
+.meta-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tag{display:inline-block;background:rgba(255,255,255,0.02);color:var(--muted);padding:6px 8px;border-radius:999px;font-size:12px}
+.right{min-width:150px;text-align:right;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.ghost-small{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:7px 9px;border-radius:8px;color:var(--muted);cursor:pointer}
+.progress{height:10px;background:rgba(255,255,255,0.02);border-radius:999px;overflow:hidden}
+.progress > .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.muted{color:var(--muted)}
+.footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
+aside .section-title{font-weight:700;margin-bottom:8px}
+.badge{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);color:var(--muted);font-size:13px}
+
+.profile-card{display:flex;gap:18px;align-items:flex-start;padding:18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+.profile-card img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.06)}
+.profile-details{flex:1}
+.profile-details h2{margin:0;font-size:22px}
+.profile-details p{color:var(--muted);margin-top:6px;margin-bottom:12px}
+.badge-list{margin-top:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px}
+.stat-box{background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;text-align:center}
+.stat-box span{display:block;font-weight:700;color:white;font-size:18px}
+.stat-box label{font-size:12px;color:var(--muted)}
+
+.form-row{display:flex;gap:8px;align-items:center;margin-top:12px}
+.input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;flex:1}
+
+@media (max-width:980px){ main{grid-template-columns:1fr;} .right{align-items:flex-start;text-align:left;min-width:unset} .profile-card{flex-direction:column;align-items:center;text-align:center} .profile-details{text-align:center} }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title">
+      <h1>Steam UX Fix</h1>
+      <div class="subtitle">Prototype — store, library, downloads and improved profile</div>
+    </div>
+
+    <div class="top-controls">
+      <select id="langSelect"><option>English</option><option>Русский</option></select>
+      <button class="btn ghost" id="btnSettings">Settings</button>
+      <button class="btn ghost" id="btnReset">Reset Data</button>
+
+      <!-- Profile icon (anonymous) -->
+      <div class="profile-icon" id="profileButton" title="Open profile">
+        <div class="anon" style="font-size:18px;color:var(--muted);">?</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <nav class="tabs" id="mainTabs">
+        <button data-tab="home" class="active">Home</button>
+        <button data-tab="store">Store</button>
+        <button data-tab="library">Library</button>
+        <button data-tab="downloads">Downloads</button>
+        <button data-tab="profile">Profile</button>
+        <button data-tab="settings">Settings</button>
+      </nav>
+
+      <div class="content" id="contentArea" aria-live="polite"></div>
+    </section>
+
+    <aside class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="section-title">Overview</div>
+        <div class="badge" id="quickStats">Games 0 • Downloads 0</div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="section-title">Top Picks</div>
+        <ul id="topIndie" class="muted" style="margin-top:8px"></ul>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="section-title">Wishlist</div>
+        <div id="miniWishlist" class="muted" style="margin-top:8px">Empty</div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn ghost" data-open="store">Open Store</button>
+        <button class="btn ghost" data-open="downloads">Open Downloads</button>
+        <button class="btn ghost" data-open="library">Open Library</button>
+      </div>
+    </aside>
+  </main>
+
+  <div class="footer">Prototype — local demo. Data saved in localStorage.</div>
+</div>
+
+<script>
+/* Updated: library default now explicitly uses real games (CS2, Elden Ring, Stardew Valley).
+   Also added Reset Data button to clear localStorage if old data prevents changes showing.
+*/
+
+// ----------------- Data (real game names + image URLs) -----------------
+const DEFAULT_GAMES = [
+  {id:1,title:"Cyberpunk 2077",tags:["rpg","open-world"],sizeMB:70000,price:49.99,rating:4.1,img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg"},
+  {id:2,title:"Counter-Strike 2",tags:["competitive","multiplayer"],sizeMB:25000,price:0.00,rating:4.8,img:"https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg"},
+  {id:3,title:"Baldur's Gate 3",tags:["rpg","story-rich"],sizeMB:120000,price:59.99,rating:4.9,img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg"},
+  {id:4,title:"Stardew Valley",tags:["indie","casual"],sizeMB:500,price:14.99,rating:4.9,img:"https://cdn.cloudflare.steamstatic.com/steam/apps/413150/header.jpg"},
+  {id:5,title:"Hades II (early)",tags:["indie","roguelike"],sizeMB:12000,price:29.99,rating:4.6,img:"https://images.igdb.com/igdb/image/upload/t_cover_big/co6mkv.jpg"},
+  {id:6,title:"Elden Ring",tags:["action","rpg"],sizeMB:60000,price:59.99,rating:4.7,img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg"}
+];
+
+// ----------------- Local storage helpers -----------------
+const LS = {
+  load(key, fallback){ try{ const v=localStorage.getItem(key); return v? JSON.parse(v): fallback }catch(e){ return fallback } },
+  save(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+};
+
+// ----------------- App state -----------------
+// <<-- IMPORTANT CHANGE HERE: library default explicitly set to CS2 (id 2), Elden Ring (id 6), Stardew (id 4)
+const state = {
+  games: DEFAULT_GAMES.slice(),
+  library: LS.load('sf_library', [ DEFAULT_GAMES[1], DEFAULT_GAMES[5], DEFAULT_GAMES[3] ]), // CS2, Elden Ring, Stardew Valley
+  wishlist: LS.load('sf_wishlist', [4]),
+  downloads: LS.load('sf_downloads', [
+    {gameId:4,progress:0.18,speedKbps:2048,status:'downloading'},
+    {gameId:2,progress:0.62,speedKbps:1536,status:'paused'}
+  ]),
+  settings: LS.load('sf_settings',{autoUpdate:true,autoTranslate:false}),
+  profile: LS.load('sf_profile', {nick:'Crymora', about:'Anonymous gamer. Loves competitive and indie titles.', avatar:null, stats:{games:126,achievements:53,playtime:'240h',friends:9}, favorites:[2,6,4]}),
+  lastQuery: ''
+};
+
+function persistAll(){
+  LS.save('sf_library', state.library);
+  LS.save('sf_wishlist', state.wishlist);
+  LS.save('sf_downloads', state.downloads);
+  LS.save('sf_settings', state.settings);
+  LS.save('sf_profile', state.profile);
+}
+
+// ----------------- DOM refs -----------------
+const tabsEl = document.getElementById('mainTabs');
+const contentEl = document.getElementById('contentArea');
+const quickStats = document.getElementById('quickStats');
+const topIndie = document.getElementById('topIndie');
+const miniWishlist = document.getElementById('miniWishlist');
+const profileButton = document.getElementById('profileButton');
+const btnReset = document.getElementById('btnReset');
+
+// ----------------- Utilities -----------------
+function fmtSize(mb){ return mb >= 1024 ? (mb/1024).toFixed(1) + ' GB' : mb + ' MB'; }
+function findGame(id){ return state.games.find(g=>g.id === Number(id)) || {title:'Unknown', img:null}; }
+function updateSidebar(){
+  quickStats.textContent = `Games ${state.library.length} • Downloads ${state.downloads.length}`;
+  topIndie.innerHTML = '';
+  state.games.filter(g=>g.tags.includes('indie') || g.tags.includes('casual')).slice(0,5).forEach(g=>{
+    const li=document.createElement('li'); li.textContent=g.title; topIndie.appendChild(li);
+  });
+  miniWishlist.textContent = state.wishlist.length ? state.wishlist.map(id=>findGame(id).title).join(', ') : 'Empty';
+}
+
+// ----------------- Event delegation -----------------
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button, [data-action], [data-tab], [data-open]');
+  if(!btn) return;
+
+  // tab click
+  if(btn.dataset.tab){
+    document.querySelectorAll('#mainTabs button').forEach(b=>b.classList.toggle('active', b===btn));
+    renderTab(btn.dataset.tab);
+    return;
+  }
+  if(btn.dataset.open){
+    const tab = btn.dataset.open; document.querySelectorAll('#mainTabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+    renderTab(tab); return;
+  }
+
+  // action handling
+  if(btn.dataset.action){
+    const action = btn.dataset.action;
+    const id = btn.dataset.id ? Number(btn.dataset.id) : null;
+    handleAction(action, id, btn);
+  }
+});
+
+// allow clicking profile icon to open Profile tab
+profileButton.addEventListener('click', ()=>{ document.querySelector('[data-tab="profile"]').click(); });
+
+// Reset button clears demo keys and reloads (useful if old localStorage hides changes)
+btnReset.addEventListener('click', ()=>{
+  if(confirm('Reset demo data (clear localStorage) and reload?')) {
+    ['sf_library','sf_wishlist','sf_downloads','sf_settings','sf_profile','sf_profileLang','sf_history'].forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  }
+});
+
+// ----------------- Action handler -----------------
+function handleAction(act, id, btn){
+  switch(act){
+    case 'install':
+      addToLibrary(id);
+      renderCurrentTab();
+      updateSidebar();
+      persistAll();
+      break;
+    case 'wishlist':
+      toggleWishlist(id);
+      renderCurrentTab();
+      updateSidebar();
+      persistAll();
+      break;
+    case 'remove-library':
+      state.library = state.library.filter(g=>g.id !== id);
+      persistAll(); updateSidebar(); renderCurrentTab();
+      break;
+    case 'toggle-download':
+      state.downloads = state.downloads.map(d=> d.gameId===id ? {...d, status: d.status==='paused' ? 'downloading' : 'paused'} : d);
+      persistAll(); renderCurrentTab(); updateSidebar();
+      break;
+    case 'remove-download':
+      state.downloads = state.downloads.filter(d=>d.gameId !== id);
+      persistAll(); renderCurrentTab(); updateSidebar();
+      break;
+    case 'save-profile':
+      const about = document.getElementById('profileAbout').value;
+      state.profile.about = about;
+      persistAll();
+      renderProfile();
+      break;
+    default:
+      console.log('unknown action', act);
+  }
+}
+
+// ----------------- Core actions -----------------
+function toggleWishlist(id){
+  if(state.wishlist.includes(id)) state.wishlist = state.wishlist.filter(x=>x!==id);
+  else state.wishlist.push(id);
+  persistAll();
+}
+function addToLibrary(id){
+  const g = findGame(id);
+  if(!state.library.find(x=>x.id===id)) state.library.push(g);
+  state.downloads.push({gameId:id,progress:0.01,speedKbps:1024 + Math.round(Math.random()*4096),status:'downloading'});
+  persistAll();
+}
+
+// ----------------- Renders -----------------
+function renderTab(tab){
+  contentEl.innerHTML = '';
+  if(tab==='home') renderHome();
+  else if(tab==='store') renderStore();
+  else if(tab==='library') renderLibrary();
+  else if(tab==='downloads') renderDownloads();
+  else if(tab==='profile') renderProfile();
+  else if(tab==='settings') renderSettings();
+}
+function renderCurrentTab(){ const active = document.querySelector('#mainTabs button.active'); renderTab(active ? active.dataset.tab : 'home'); }
+
+// HOME
+function renderHome(){
+  const wrapper = document.createElement('div');
+  const h = document.createElement('h2'); h.textContent = 'Welcome — Quick Actions'; h.style.margin='0 0 12px 0';
+  wrapper.appendChild(h);
+
+  const grid = document.createElement('div'); grid.className='grid-2';
+
+  // Recommendations
+  const rec = document.createElement('div'); rec.className='panel';
+  const rtitle=document.createElement('div'); rtitle.style.fontWeight='700'; rtitle.textContent='Recommended for you'; rec.appendChild(rtitle);
+  const rlist=document.createElement('div'); rlist.style.marginTop='8px';
+  getRecommended().slice(0,4).forEach(g=>{ const d=document.createElement('div'); d.textContent = `${g.title} — ${g.tags.join(', ')}`; d.className='muted'; rlist.appendChild(d); });
+  rec.appendChild(rlist);
+
+  // Wishlist deals
+  const wish=document.createElement('div'); wish.className='panel';
+  const wtitle=document.createElement('div'); wtitle.style.fontWeight='700'; wtitle.textContent='Wishlist Deals'; wish.appendChild(wtitle);
+  const wbody=document.createElement('div'); wbody.style.marginTop='8px';
+  const deals = state.wishlist.map(id=>findGame(id)).filter(g=>g.price && g.price < 20);
+  if(!deals.length) wbody.textContent='No current deals';
+  else deals.forEach(d=>{ const el=document.createElement('div'); el.textContent=`${d.title} — $${d.price.toFixed(2)}`; wbody.appendChild(el); });
+  wish.appendChild(wbody);
+
+  // Stats
+  const stat=document.createElement('div'); stat.className='panel';
+  const stitle=document.createElement('div'); stitle.style.fontWeight='700'; stitle.textContent='Library Stats'; stat.appendChild(stitle);
+  const sbody=document.createElement('div'); sbody.className='muted'; sbody.style.marginTop='8px'; sbody.innerHTML=`Games: <b>${state.library.length}</b><br>Downloads: <b>${state.downloads.length}</b>`;
+  stat.appendChild(sbody);
+
+  grid.appendChild(rec); grid.appendChild(wish); grid.appendChild(stat);
+  wrapper.appendChild(grid);
+  contentEl.appendChild(wrapper);
+}
+function getRecommended(){
+  const historyTags = new Set(state.profile.favorites.flatMap(id=>findGame(id).tags || []));
+  const score=(g)=> ((g.tags.includes('indie')?2:0) + (g.tags.some(t=>historyTags.has(t))?1:0) + g.rating/5);
+  if(state.lastQuery && state.lastQuery.trim()) return state.games.filter(g=>g.title.toLowerCase().includes(state.lastQuery.toLowerCase()));
+  return state.games.slice().sort((a,b)=>score(b)-score(a));
+}
+
+// STORE
+function renderStore(){
+  const container=document.createElement('div');
+  const top=document.createElement('div'); top.style.display='flex'; top.style.gap='8px'; top.style.marginBottom='12px';
+  const input=document.createElement('input'); input.type='text'; input.placeholder="Search games or tags (try 'indie')"; input.value=state.lastQuery; input.style.flex='1'; input.className='input';
+  input.addEventListener('input', ()=>{ state.lastQuery = input.value; renderStore(); });
+  const tag=document.createElement('select'); ['all','indie','multiplayer','rpg','action','casual'].forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t==='all'?'All tags':t; tag.appendChild(o);});
+  const sort=document.createElement('select'); ['relevance','price','size'].forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; sort.appendChild(o);});
+  top.appendChild(input); top.appendChild(tag); top.appendChild(sort);
+  container.appendChild(top);
+
+  const results=document.createElement('div'); results.style.display='grid'; results.style.gap='10px';
+  container.appendChild(results);
+
+  const q = (state.lastQuery || '').toLowerCase();
+  let res = state.games.filter(g=> g.title.toLowerCase().includes(q) || g.tags.join(' ').includes(q));
+  if(!q){
+    const hist = new Set(state.profile.favorites.flatMap(id=>findGame(id).tags||[]));
+    res = state.games.slice().sort((a,b)=> ( (b.tags.includes('indie')?2:0) + (b.tags.some(t=>hist.has(t))?1:0) + b.rating/5 ) - ( (a.tags.includes('indie')?2:0) + (a.tags.some(t=>hist.has(t))?1:0) + a.rating/5 ));
+  }
+  if(tag.value !== 'all') res = res.filter(g=>g.tags.includes(tag.value));
+  if(sort.value === 'price') res.sort((a,b)=>a.price-b.price);
+  if(sort.value === 'size') res.sort((a,b)=>a.sizeMB-b.sizeMB);
+
+  results.innerHTML='';
+  res.forEach(g=>{
+    const item = document.createElement('div'); item.className='game-item';
+    const art = document.createElement('div'); art.className='game-art';
+    if(g.img){ const im = document.createElement('img'); im.src=g.img; im.alt=g.title; im.onerror=()=>{ im.style.display='none'; art.textContent='No image' }; art.appendChild(im); } else art.textContent='No image';
+    const meta = document.createElement('div'); meta.className='game-meta';
+    const title = document.createElement('div'); title.className='title'; title.textContent=g.title;
+    const tags = document.createElement('div'); tags.className='muted'; tags.textContent=g.tags.join(', ');
+    meta.appendChild(title); meta.appendChild(tags);
+
+    const right = document.createElement('div'); right.className='right';
+    const price = document.createElement('div'); price.style.fontWeight='700'; price.textContent = g.price>0?`$${g.price.toFixed(2)}`:'Free';
+    const size = document.createElement('div'); size.className='muted'; size.textContent = fmtSize(g.sizeMB);
+    const actions = document.createElement('div'); actions.style.marginTop='8px'; actions.style.display='flex'; actions.style.gap='8px';
+    const btnInstall = document.createElement('button'); btnInstall.className='btn'; btnInstall.textContent='Install'; btnInstall.dataset.action='install'; btnInstall.dataset.id=g.id;
+    const btnWish = document.createElement('button'); btnWish.className='btn ghost'; btnWish.textContent = state.wishlist.includes(g.id)?'In Wishlist':'Wishlist'; btnWish.dataset.action='wishlist'; btnWish.dataset.id=g.id;
+    actions.appendChild(btnInstall); actions.appendChild(btnWish);
+
+    right.appendChild(price); right.appendChild(size); right.appendChild(actions);
+    item.appendChild(art); item.appendChild(meta); item.appendChild(right);
+    results.appendChild(item);
+  });
+
+  contentEl.appendChild(container);
+}
+
+// LIBRARY
+function renderLibrary(){
+  const wrapper=document.createElement('div');
+  const h=document.createElement('h3'); h.textContent='Your Library'; h.style.margin='0 0 12px 0'; wrapper.appendChild(h);
+  const controls=document.createElement('div'); controls.style.display='flex'; controls.style.gap='8px'; controls.style.marginBottom='10px';
+  const aZ=document.createElement('button'); aZ.className='btn ghost'; aZ.textContent='Sort A–Z'; aZ.onclick=()=>{ state.library.sort((a,b)=>a.title.localeCompare(b.title)); persistAll(); renderLibrary(); };
+  const byRating=document.createElement('button'); byRating.className='btn ghost'; byRating.textContent='By rating'; byRating.onclick=()=>{ state.library.sort((a,b)=>b.rating-a.rating); persistAll(); renderLibrary(); };
+  controls.appendChild(aZ); controls.appendChild(byRating); wrapper.appendChild(controls);
+
+  const list=document.createElement('div'); list.style.display='grid'; list.style.gap='10px';
+  state.library.forEach(g=>{
+    const it=document.createElement('div'); it.className='game-item';
+    const art=document.createElement('div'); art.className='game-art'; if(g.img){ const im=document.createElement('img'); im.src=g.img; art.appendChild(im);} else art.textContent='No image';
+    const meta=document.createElement('div'); meta.className='game-meta';
+    const title=document.createElement('div'); title.className='title'; title.textContent=g.title;
+    const tags=document.createElement('div'); tags.className='muted'; tags.textContent=`${g.tags.join(', ')} • ${fmtSize(g.sizeMB)}`;
+    meta.appendChild(title); meta.appendChild(tags);
+    const right=document.createElement('div'); right.className='right';
+    const rating=document.createElement('div'); rating.className='muted'; rating.textContent=`${g.rating} ★`;
+    const btnRem=document.createElement('button'); btnRem.className='btn ghost'; btnRem.textContent='Remove'; btnRem.dataset.action='remove-library'; btnRem.dataset.id=g.id;
+    right.appendChild(rating); right.appendChild(btnRem);
+    it.appendChild(art); it.appendChild(meta); it.appendChild(right);
+    list.appendChild(it);
+  });
+  wrapper.appendChild(list);
+  contentEl.appendChild(wrapper);
+}
+
+// DOWNLOADS
+function renderDownloads(){
+  const wrapper=document.createElement('div');
+  const h=document.createElement('h3'); h.textContent='Download Manager'; h.style.margin='0 0 12px 0'; wrapper.appendChild(h);
+  const info=document.createElement('div'); info.className='muted'; info.textContent='Queue, speeds and controls (simulation)'; wrapper.appendChild(info);
+  const list=document.createElement('div'); list.style.display='grid'; list.style.gap='12px'; list.style.marginTop='12px';
+  if(state.downloads.length===0){ const e=document.createElement('div'); e.className='muted'; e.textContent='No active downloads'; list.appendChild(e); }
+  else state.downloads.forEach(d=>{
+    const g=findGame(d.gameId);
+    const item=document.createElement('div'); item.className='panel'; item.style.padding='12px';
+    const top=document.createElement('div'); top.style.display='flex'; top.style.justifyContent='space-between'; top.style.alignItems='center';
+    const left=document.createElement('div'); const title=document.createElement('div'); title.style.fontWeight='700'; title.textContent=g.title;
+    const small=document.createElement('div'); small.className='muted'; small.textContent=`${Math.round(d.progress*100)}% • ${Math.round(d.speedKbps/1024)} MB/s • ${d.status}`;
+    left.appendChild(title); left.appendChild(small);
+    const right=document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
+    const btnToggle=document.createElement('button'); btnToggle.className='btn ghost'; btnToggle.textContent = d.status==='paused' ? 'Resume' : 'Pause'; btnToggle.dataset.action='toggle-download'; btnToggle.dataset.id=d.gameId;
+    const btnRemove=document.createElement('button'); btnRemove.className='btn ghost'; btnRemove.textContent='Remove'; btnRemove.dataset.action='remove-download'; btnRemove.dataset.id=d.gameId;
+    right.appendChild(btnToggle); right.appendChild(btnRemove);
+    top.appendChild(left); top.appendChild(right);
+    const barWrap=document.createElement('div'); barWrap.style.marginTop='10px';
+    const progress=document.createElement('div'); progress.className='progress'; const inner=document.createElement('div'); inner.className='bar'; inner.style.width = Math.min(100,Math.round(d.progress*100)) + '%';
+    progress.appendChild(inner); barWrap.appendChild(progress);
+    item.appendChild(top); item.appendChild(barWrap); list.appendChild(item);
+  });
+  wrapper.appendChild(list); contentEl.appendChild(wrapper);
+}
+
+// PROFILE (improved + editable about)
+function renderProfile(){
+  const wrapper=document.createElement('div');
+  const container=document.createElement('div'); container.className='profile-card';
+  // avatar (anonymous if no avatar)
+  const avatar = document.createElement('div');
+  if(state.profile.avatar){
+    const img=document.createElement('img'); img.src=state.profile.avatar; avatar.appendChild(img);
+  } else {
+    const anon=document.createElement('div'); anon.style.width='120px'; anon.style.height='120px'; anon.style.borderRadius='50%'; anon.style.display='flex'; anon.style.alignItems='center'; anon.style.justifyContent='center'; anon.style.fontSize='44px'; anon.style.background='linear-gradient(180deg,#0b1220,#071028)'; anon.style.color='var(--muted)'; anon.textContent='?'; avatar.appendChild(anon);
+  }
+  // details
+  const details=document.createElement('div'); details.className='profile-details';
+  const h=document.createElement('h2'); h.textContent = state.profile.nick;
+  const about=document.createElement('p'); about.textContent = state.profile.about;
+  const badges=document.createElement('div'); badges.className='badge-list'; badges.innerHTML = `<span class="badge">Level 32</span> <span class="badge">Member since 2018</span> <span class="badge">Anonymous</span>`;
+  details.appendChild(h); details.appendChild(about); details.appendChild(badges);
+
+  const statsDiv=document.createElement('div'); statsDiv.className='stats-grid';
+  const s = state.profile.stats;
+  const boxes = [
+    {v: s.games || 0, l:'Games'},
+    {v: s.achievements || 0, l:'Achievements'},
+    {v: s.playtime || '0h', l:'Playtime'},
+    {v: s.friends || 0, l:'Friends'}
+  ];
+  boxes.forEach(bx=>{
+    const sb=document.createElement('div'); sb.className='stat-box'; sb.innerHTML=`<span>${bx.v}</span><label>${bx.l}</label>`; statsDiv.appendChild(sb);
+  });
+
+  // edit area
+  const editRow=document.createElement('div'); editRow.className='form-row';
+  const input=document.createElement('textarea'); input.id='profileAbout'; input.className='input'; input.style.minHeight='70px'; input.value = state.profile.about;
+  const saveBtn=document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='Save'; saveBtn.dataset.action='save-profile';
+  editRow.appendChild(input); editRow.appendChild(saveBtn);
+
+  // favorites
+  const favTitle=document.createElement('h3'); favTitle.textContent='Favorite Games'; favTitle.style.marginTop='18px';
+  const favGrid=document.createElement('div'); favGrid.className='stats-grid';
+  state.profile.favorites.forEach(id=>{
+    const g=findGame(id);
+    const fb=document.createElement('div'); fb.className='stat-box'; fb.innerHTML = `<span style="font-size:16px">${g.title}</span><label>${Math.round(Math.random()*200)}h</label>`; favGrid.appendChild(fb);
+  });
+
+  details.appendChild(statsDiv); details.appendChild(editRow); details.appendChild(favTitle); details.appendChild(favGrid);
+  container.appendChild(avatar); container.appendChild(details);
+  wrapper.appendChild(container);
+  contentEl.appendChild(wrapper);
+}
+
+// SETTINGS render
+function renderSettings(){
+  const wrapper=document.createElement('div');
+  const h=document.createElement('h3'); h.textContent='Settings'; h.style.margin='0 0 10px 0'; wrapper.appendChild(h);
+  const upd=document.createElement('label'); upd.style.display='flex'; upd.style.gap='8px'; upd.style.alignItems='center'; upd.style.marginBottom='10px';
+  const chk=document.createElement('input'); chk.type='checkbox'; chk.checked = !!state.settings.autoUpdate; chk.addEventListener('change', ()=>{ state.settings.autoUpdate = chk.checked; persistAll(); });
+  upd.appendChild(chk); upd.appendChild(document.createTextNode(' Auto-update installed games'));
+  const trans=document.createElement('label'); trans.style.display='flex'; trans.style.gap='8px'; trans.style.alignItems='center';
+  const chk2=document.createElement('input'); chk2.type='checkbox'; chk2.checked = !!state.settings.autoTranslate; chk2.addEventListener('change', ()=>{ state.settings.autoTranslate = chk2.checked; persistAll(); });
+  trans.appendChild(chk2); trans.appendChild(document.createTextNode(' Auto-translate profiles (simulated)'));
+  wrapper.appendChild(upd); wrapper.appendChild(trans);
+  contentEl.appendChild(wrapper);
+}
+
+// ----------------- Downloads simulation -----------------
+function simulateDownloads(){
+  let changed=false;
+  state.downloads = state.downloads.map(d=>{
+    if(d.status !== 'downloading') return d;
+    const inc = Math.random()*0.03 + 0.01;
+    const next = Math.min(1, d.progress + inc);
+    const speed = Math.max(128, Math.round(d.speedKbps * (0.9 + Math.random()*0.2)));
+    if(next !== d.progress) changed = true;
+    return {...d, progress: next, speedKbps: speed};
+  });
+
+  // complete downloads and add to library if not present
+  const completed = state.downloads.filter(d=>d.progress >= 1);
+  if(completed.length){
+    completed.forEach(c=>{ if(!state.library.find(x=>x.id===c.gameId)) state.library.push(findGame(c.gameId)); });
+    state.downloads = state.downloads.filter(d=>d.progress < 1);
+    changed = true;
+  }
+  if(changed){ persistAll(); renderCurrentTab(); updateSidebar(); }
+}
+setInterval(simulateDownloads, 2000);
+
+// ----------------- Init -----------------
+updateSidebar();
+renderCurrentTab();
+window.addEventListener('beforeunload', ()=> persistAll());
+window._steamFix = {state, persistAll, renderCurrentTab};
+</script>
+</body>
+</html>
